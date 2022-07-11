@@ -1,0 +1,61 @@
+stages:
+  - build
+#  - test
+  - package
+  - deploy
+build:
+  image: openjdk:8.0.1-oraclelinux8
+  stage: build
+  script:
+#    - netstat -tulpn | grep 9514 | awk '{print $7}' | tr -cd [0-9] | xargs kill -9
+    - chmod +x gradlew
+    - ./gradlew clean
+    - ./gradlew build
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 10 min
+#
+#test:
+#  image: openjdk:8.0.1-oraclelinux8
+#  stage: test
+#  script:
+#    - pwd
+#    - chmod +x gradlew
+#    - ./gradlew test
+
+#deploy:
+#  image: openjdk:8.0.1-oraclelinux8
+#  stage: deploy
+#  script:
+#    - cd build/libs/
+#    - java -jar Test-0.0.1-SNAPSHOT.jar
+
+
+package:
+  image: docker:latest
+  stage: package
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$DOCKER_HUB_USER" --password-stdin < "$DOCKER_HUB_PW"
+  script:
+    - docker build -t tjsrsdqq/test .
+    - docker push tjsrsdqq/test
+  after_script:
+    - docker logout
+
+deploy:
+  stage: deploy
+  before_script:
+    - docker login -u "$DOCKER_HUB_USER" --password-stdin < "$DOCKER_HUB_PW"
+  script:
+    - docker stop testcontainer || true
+    - docker rm testcontainer || true
+    - docker rmi tjsrsdqq/test || true
+    - docker run -d -it --restart always -p 9514:9514 --name testcontainer tjsrsdqq/test
+  after_script:
+    - docker logout
+  when: on_success
+  only:
+    - master
