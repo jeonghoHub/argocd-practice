@@ -1,8 +1,8 @@
-# devops-test
-**아래의 기술을 이용하여 CI/CD 테스트**
+# devops-practice
+**아래의 기술을 이용하여 쿠버네티스 CI/CD 테스트**
 
-* Java
 * Spring Boot
-* GitLab CI/CD
+* GitHub action 
 * Docker
-* Docker Hub
+* Agro CD
+* Kubernates
